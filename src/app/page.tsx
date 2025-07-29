@@ -6,7 +6,22 @@ import { useState } from 'react';
 export default function Home() {
   const [productPrice, setProductPrice] = useState('');
   const [shippingType, setShippingType] = useState<'buyer' | 'free'>('buyer');
-  const [feeDetails, setFeeDetails] = useState<null | any>(null);
+  type FeeDetails =
+  | {
+      price: string;
+      percentageFee: string;
+      fixedFee: string;
+      totalFees: string;
+      netAmount: string;
+      shippingType: string;
+      type: 'success';
+    }
+  | {
+      message: string;
+      type: 'error' | 'info';
+    };
+
+const [feeDetails, setFeeDetails] = useState<FeeDetails | null>(null);
 
   const calculateFees = () => {
     const price = parseFloat(productPrice);
@@ -27,7 +42,7 @@ export default function Home() {
       return;
     }
 
-    let totalFeePercentage = shippingType === 'free' ? 0.14 + 0.06 : 0.14;
+    const totalFeePercentage = shippingType === 'free' ? 0.14 + 0.06 : 0.14;
     const fixedFee = 4.00;
     const percentageFee = price * totalFeePercentage;
     const totalFees = percentageFee + fixedFee;
