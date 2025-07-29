@@ -1,103 +1,151 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client';
+
+import { useState } from 'react';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [productPrice, setProductPrice] = useState('');
+  const [shippingType, setShippingType] = useState<'buyer' | 'free'>('buyer');
+  const [feeDetails, setFeeDetails] = useState<null | any>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const calculateFees = () => {
+    const price = parseFloat(productPrice);
+
+    if (isNaN(price) || price <= 0) {
+      setFeeDetails({
+        message: 'Por favor, insira um preço de produto válido e maior que zero.',
+        type: 'error'
+      });
+      return;
+    }
+
+    if (price < 19.00) {
+      setFeeDetails({
+        message: 'Para produtos abaixo de R$ 19,00, as taxas específicas não se aplicam.',
+        type: 'info'
+      });
+      return;
+    }
+
+    let totalFeePercentage = shippingType === 'free' ? 0.14 + 0.06 : 0.14;
+    const fixedFee = 4.00;
+    const percentageFee = price * totalFeePercentage;
+    const totalFees = percentageFee + fixedFee;
+    const netAmount = price - totalFees;
+
+    setFeeDetails({
+      price: price.toFixed(2),
+      percentageFee: percentageFee.toFixed(2),
+      fixedFee: fixedFee.toFixed(2),
+      totalFees: totalFees.toFixed(2),
+      netAmount: netAmount.toFixed(2),
+      shippingType: shippingType === 'free' ? 'Frete Grátis' : 'Frete para o Comprador',
+      type: 'success'
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center p-4 font-sans">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 hover:scale-105">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">
+          Calculadora de Taxas Shopee
+        </h1>
+
+        <div className="mb-5">
+          <label htmlFor="productPrice" className="block text-gray-700 text-sm font-semibold mb-2">
+            Preço do Produto (R$)
+          </label>
+          <input
+            type="number"
+            id="productPrice"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 ease-in-out text-gray-800"
+            placeholder="Ex: 100.00"
+            value={productPrice}
+            onChange={(e) => setProductPrice(e.target.value)}
+            min="0"
+            step="0.01"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">
+            Tipo de Frete
+          </label>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-purple-600"
+                name="shippingType"
+                value="buyer"
+                checked={shippingType === 'buyer'}
+                onChange={() => setShippingType('buyer')}
+              />
+              <span className="ml-2 text-gray-800">Comprador Paga</span>
+            </label>
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-purple-600"
+                name="shippingType"
+                value="free"
+                checked={shippingType === 'free'}
+                onChange={() => setShippingType('free')}
+              />
+              <span className="ml-2 text-gray-800">Frete Grátis</span>
+            </label>
+          </div>
+        </div>
+
+        <button
+          onClick={calculateFees}
+          className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Calcular Taxas
+        </button>
+
+        {feeDetails && (
+          <div
+            className={`mt-6 p-5 rounded-lg border-l-4 ${
+              feeDetails.type === 'error'
+                ? 'bg-red-100 border-red-500 text-red-800'
+                : feeDetails.type === 'info'
+                ? 'bg-blue-100 border-blue-500 text-blue-800'
+                : 'bg-green-100 border-green-500 text-green-800'
+            } transition-all duration-300 ease-in-out`}
+          >
+            {feeDetails.type !== 'success' ? (
+              <p className="font-semibold text-lg">{feeDetails.message}</p>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-3">Detalhes do Cálculo:</h2>
+                <p className="mb-1">
+                  <span className="font-semibold">Preço do Produto:</span> R$ {feeDetails.price}
+                </p>
+                <p className="mb-1">
+                  <span className="font-semibold">Tipo de Frete:</span> {feeDetails.shippingType}
+                </p>
+                <p className="mb-1">
+                  <span className="font-semibold">Taxa Percentual:</span> R$ {feeDetails.percentageFee}
+                </p>
+                <p className="mb-1">
+                  <span className="font-semibold">Taxa Fixa:</span> R$ {feeDetails.fixedFee}
+                </p>
+                <p className="text-lg font-bold mt-2">
+                  <span className="text-purple-700">Total de Taxas:</span> R$ {feeDetails.totalFees}
+                </p>
+                <p className="text-xl font-bold mt-3">
+                  <span className="text-purple-900">Valor Líquido:</span> R$ {feeDetails.netAmount}
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
+        <p className="text-gray-600 text-xs text-center mt-6">
+          *Válido para produtos acima de R$ 19,00.
+        </p>
+      </div>
     </div>
   );
 }
